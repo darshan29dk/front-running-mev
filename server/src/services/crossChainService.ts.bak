@@ -1,0 +1,243 @@
+import { EventEmitter } from 'events';
+import { JsonRpcProvider, TransactionResponse } from 'ethers';
+import { Connection, ParsedTransactionWithMeta } from '@solana/web3.js';
+import config from '../config';
+import mevDetector from '../utils/mevDetector';
+import { MEVAttack, MempoolTransaction } from '../types';
+
+export type CrossChainNetwork = 'arbitrum' | 'bsc' | 'solana';
+
+class CrossChainService extends EventEmitter {
+  private arbitrumProvider?: JsonRpcProvider;
+  private bscProvider?: JsonRpcProvider;
+  private solanaConnection?: Connection;
+  private intervals: Map<CrossChainNetwork, NodeJS.Timeout> = new Map();
+  private readonly pollInterval = config.crossChain?.pollIntervalMs || 15000;
+
+  start(): void {
+    this.stop();
+    this.startArbitrum();
+    this.startBsc();
+    this.startSolana();
+  }
+
+  stop(): void {
+    this.intervals.forEach((interval) => clearInterval(interval));
+    this.intervals.clear();
+    this.arbitrumProvider = undefined;
+    this.bscProvider = undefined;
+    this.solanaConnection = undefined;
+  }
+
+  private startArbitrum(): void {
+    const rpcUrl = config.crossChain?.arbitrum?.rpcUrl;
+    if (!rpcUrl) {
+      return;
+    }
+    this.arbitrumProvider = new JsonRpcProvider(rpcUrl);
+    this.pollArbitrum();
+    this.intervals.set('arbitrum', setInterval(() => this.pollArbitrum(), this.pollInterval));
+  }
+
+  private startBsc(): void {
+    const rpcUrl = config.crossChain?.bsc?.rpcUrl;
+    if (!rpcUrl) {
+      return;
+    }
+    this.bscProvider = new JsonRpcProvider(rpcUrl);
+    this.pollBsc();
+    this.intervals.set('bsc', setInterval(() => this.pollBsc(), this.pollInterval));
+  }
+
+  private startSolana(): void {
+    const rpcUrl = config.crossChain?.solana?.rpcUrl;
+    if (!rpcUrl) {
+      return;
+    }
+    this.solanaConnection = new Connection(rpcUrl, 'confirmed');
+    this.pollSolana();
+    this.intervals.set('solana', setInterval(() => this.pollSolana(), this.pollInterval));
+  }
+
+  private async pollArbitrum(): Promise<void> {
+    if (!this.arbitrumProvider) {
+      return;
+    }
+    try {
+      const block = await this.arbitrumProvider.getBlock('latest', true);
+      if (!block || !block.transactions?.length) {
+        return;
+      }
+      const pending = block.transactions.length;
+      const sampled = block.transactions.slice(-15);
+      sampled.forEach((tx) => {
+        const attack = this.buildEvmAttack(tx as unknown as TransactionResponse, pending, block.number, 'arbitrum');
+        if (attack) {
+          this.emit('attack-detected', attack);
+        }
+      });
+    } catch (error) {
+      this.emit('error', error);
+    }
+  }
+
+  private async pollBsc(): Promise<void> {
+    if (!this.bscProvider) {
+      return;
+    }
+    try {
+      const block = await this.bscProvider.getBlock('latest', true);
+      if (!block || !block.transactions?.length) {
+        return;
+      }
+      const pending = block.transactions.length;
+      const sampled = block.transactions.slice(-15);
+      sampled.forEach((tx) => {
+        const attack = this.buildEvmAttack(tx as unknown as TransactionResponse, pending, block.number, 'bsc');
+        if (attack) {
+          this.emit('attack-detected', attack);
+        }
+      });
+    } catch (error) {
+      this.emit('error', error);
+    }
+  }
+
+  private async pollSolana(): Promise<void> {
+    if (!this.solanaConnection) {
+      return;
+    }
+    try {
+      const slot = await this.solanaConnection.getSlot('confirmed');
+      const block = await this.solanaConnection.getBlock(slot, {
+        maxSupportedTransactionVersion: 0,
+        rewards: false,
+        transactionDetails: 'full',
+      });
+      if (!block?.transactions?.length) {
+        return;
+      }
+      const sampled = block.transactions.slice(-20);
+      sampled.forEach((entry) => {
+        const attack = this.buildSolanaAttack(entry, block.blockTime ?? Math.floor(Date.now() / 1000), slot);
+        if (attack) {
+          this.emit('attack-detected', attack);
+        }
+      });
+    } catch (error) {
+      this.emit('error', error);
+    }
+  }
+
+  private buildEvmAttack(
+    tx: TransactionResponse,
+    pending: number,
+    blockNumber: number,
+    network: CrossChainNetwork
+  ): MEVAttack | null {
+    if (!tx.hash || !tx.to || !tx.from) {
+      return null;
+    }
+    const timestamp = typeof tx.timestamp === 'number' ? tx.timestamp : Math.floor(Date.now() / 1000);
+    const mempoolTx: MempoolTransaction = {
+      hash: tx.hash,
+      from: tx.from,
+      to: tx.to,
+      value: tx.value ? tx.value.toString() : '0',
+      gasPrice: tx.maxFeePerGas ? tx.maxFeePerGas.toString() : tx.gasPrice ? tx.gasPrice.toString() : '0',
+      gasLimit: tx.gasLimit ? tx.gasLimit.toString() : '0',
+      nonce: typeof tx.nonce === 'number' ? tx.nonce : Number(tx.nonce || 0),
+      blockNumber: blockNumber,
+      timestamp,
+      input: tx.data,
+      maxFeePerGas: tx.maxFeePerGas ? tx.maxFeePerGas.toString() : undefined,
+      maxPriorityFeePerGas: tx.maxPriorityFeePerGas ? tx.maxPriorityFeePerGas.toString() : undefined,
+      type: typeof tx.type === 'number' ? tx.type : parseInt((tx.type as any) || '0', 10),
+    };
+    const context = {
+      pendingTransactions: pending,
+      detectedPattern: this.classifyEvmPattern(tx),
+    };
+    const attack = mevDetector.analyzeTransaction(mempoolTx, context);
+    attack.network = network;
+    attack.source = 'cross-chain';
+    attack.blockNumber = blockNumber;
+    return attack;
+  }
+
+  private buildSolanaAttack(
+    entry: ParsedTransactionWithMeta,
+    blockTime: number,
+    slot: number
+  ): MEVAttack | null {
+    const signature = entry.transaction.signatures?.[0];
+    if (!signature) {
+      return null;
+    }
+    const feeLamports = entry.meta?.fee ?? 0;
+    const computeUnits = entry.meta?.computeUnitsConsumed ?? 0;
+    const instructionCount = entry.transaction.message.instructions?.length ?? 0;
+    const riskScore = Math.min(
+      100,
+      Number((feeLamports / 5_000) + computeUnits / 1_000 + instructionCount * 5)
+    );
+    const attackType = riskScore > 75 ? 'sandwich' : riskScore > 55 ? 'front-run' : 'other';
+    const firstAccount = entry.transaction.message.accountKeys?.[0];
+    const secondAccount = entry.transaction.message.accountKeys?.[1];
+    const fromAddress = this.extractSolanaAddress(firstAccount);
+    const toAddress = this.extractSolanaAddress(secondAccount);
+    const balanceChange = entry.meta?.postBalances?.[0] ?? 0;
+    const slippageLoss = Number(((feeLamports / 1e9) * 0.1).toFixed(6));
+    const attack: MEVAttack = {
+      hash: signature,
+      attackType,
+      riskScore,
+      slippageLoss,
+      gasPrice: (feeLamports / 1e9).toFixed(6) + ' SOL',
+      timestamp: new Date(blockTime * 1000).toISOString(),
+      transactionDetails: {
+        from: fromAddress,
+        to: toAddress,
+        value: (balanceChange / 1e9).toFixed(6) + ' SOL',
+        gasLimit: String(computeUnits),
+      },
+      network: 'solana',
+      source: 'cross-chain',
+      blockNumber: slot,
+    };
+    return attack;
+  }
+
+  private classifyEvmPattern(tx: TransactionResponse): 'sandwich' | 'front-run' | 'back-run' | 'other' {
+    const gas = tx.maxFeePerGas ? tx.maxFeePerGas : tx.gasPrice ? BigInt(tx.gasPrice.toString()) : 0n;
+    const value = tx.value ? BigInt(tx.value.toString()) : 0n;
+    if (gas > 200_000_000_000n && value > 5n * 10n ** 17n) {
+      return 'sandwich';
+    }
+    if (gas > 120_000_000_000n) {
+      return 'front-run';
+    }
+    if (value > 2n * 10n ** 18n) {
+      return 'back-run';
+    }
+    return 'other';
+  }
+
+  private extractSolanaAddress(account: any): string {
+    if (!account) {
+      return 'unknown';
+    }
+    if (typeof account === 'string') {
+      return account;
+    }
+    if (account.pubkey && typeof account.pubkey.toBase58 === 'function') {
+      return account.pubkey.toBase58();
+    }
+    if (typeof account.toBase58 === 'function') {
+      return account.toBase58();
+    }
+    return String(account);
+  }
+}
+
+export default new CrossChainService();

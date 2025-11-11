@@ -1,0 +1,128 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model UserProfile {
+  id                     String             @id @default(uuid())
+  address                String?            @unique
+  did                    String?            @unique
+  email                  String?            @unique
+  alias                  String
+  points                 Int                @default(0)
+  level                  Int                @default(1)
+  badges                 String[]           @default([])
+  rewards                Json               @default("[]")
+  protectedTransactions  Int                @default(0) @map("protected_transactions")
+  leaderboardRank        Int?               @map("leaderboard_rank")
+  alerts                 Json               @default("{\"sandwich\":false,\"frontrun\":false,\"backrun\":false,\"highGas\":false,\"highSlippage\":false}")
+  lastActiveAt           DateTime?          @map("last_active_at")
+  createdAt              DateTime           @default(now()) @map("created_at")
+  updatedAt              DateTime           @updatedAt @map("updated_at")
+  transactions           TransactionHistory[]
+  sessions               AuthSession[]
+  riskSnapshots          RiskScoreSnapshot[]
+
+  @@map("user_profiles")
+}
+
+model AuthSession {
+  id           String      @id @default(uuid())
+  userId       String      @map("user_id")
+  walletAddress String?    @map("wallet_address")
+  did          String?
+  jwtId        String      @unique @map("jwt_id")
+  expiresAt    DateTime    @map("expires_at")
+  createdAt    DateTime    @default(now()) @map("created_at")
+  updatedAt    DateTime    @updatedAt @map("updated_at")
+  user         UserProfile @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([expiresAt], map: "idx_auth_sessions_expires_at")
+  @@map("auth_sessions")
+}
+
+model Subscriber {
+  id             String   @id @default(uuid())
+  email          String   @unique
+  alerts         Json     @default("{\"sandwich\":true,\"frontrun\":true,\"backrun\":true,\"highGas\":true,\"highSlippage\":true}")
+  subscribedAt   DateTime @default(now()) @map("subscribed_at")
+  lastNotifiedAt DateTime? @map("last_notified_at")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  @@map("subscribers")
+}
+
+model TransactionHistory {
+  id                  String      @id @default(uuid())
+  userId              String?     @map("user_id")
+  txHash              String      @unique @map("tx_hash")
+  fromAddress         String?     @map("from_address")
+  toAddress           String?     @map("to_address")
+  value               Decimal?    @db.Decimal(78, 0)
+  gasPrice            Decimal?    @map("gas_price") @db.Decimal(78, 0)
+  gasUsed             Decimal?    @map("gas_used") @db.Decimal(78, 0)
+  status              String?
+  simulated           Boolean     @default(false)
+  detectedAttackType  String?     @map("detected_attack_type")
+  riskScore           Float?      @map("risk_score")
+  metadata            Json?
+  recordedAt          DateTime    @default(now()) @map("recorded_at")
+  createdAt           DateTime    @default(now()) @map("created_at")
+  updatedAt           DateTime    @updatedAt @map("updated_at")
+  user                UserProfile? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([recordedAt], map: "idx_transaction_history_recorded_at")
+  @@map("transaction_history")
+}
+
+model MevEvent {
+  id               BigInt   @id @default(autoincrement())
+  observedAt       DateTime @map("observed_at")
+  network          String
+  attackType       String   @map("attack_type")
+  riskScore        Float    @map("risk_score")
+  slippageLoss     Float    @map("slippage_loss")
+  gasPrice         Decimal? @map("gas_price") @db.Decimal(78, 0)
+  transactionHash  String?  @map("transaction_hash")
+  victimAddress    String?  @map("victim_address")
+  attackerAddress  String?  @map("attacker_address")
+  metadata         Json?
+  createdAt        DateTime @default(now()) @map("created_at")
+
+  @@index([observedAt], map: "idx_mev_events_observed_at")
+  @@map("mev_events")
+}
+
+model GasMetric {
+  id          BigInt   @id @default(autoincrement())
+  recordedAt  DateTime @map("recorded_at")
+  network     String
+  slow        Decimal? @db.Decimal(30, 10)
+  standard    Decimal? @db.Decimal(30, 10)
+  fast        Decimal? @db.Decimal(30, 10)
+  metadata    Json?
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  @@index([recordedAt], map: "idx_gas_metrics_recorded_at")
+  @@map("gas_metrics")
+}
+
+model RiskScoreSnapshot {
+  id          BigInt      @id @default(autoincrement())
+  recordedAt  DateTime    @map("recorded_at")
+  profileId   String?     @map("profile_id")
+  network     String?
+  averageRisk Float?      @map("average_risk")
+  maxRisk     Float?      @map("max_risk")
+  metadata    Json?
+  createdAt   DateTime    @default(now()) @map("created_at")
+  user        UserProfile? @relation(fields: [profileId], references: [id], onDelete: SetNull)
+
+  @@index([recordedAt], map: "idx_risk_scores_recorded_at")
+  @@map("risk_score_snapshots")
+}

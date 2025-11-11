@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>MEV Detector Dashboard</title>
+    <link rel="stylesheet" href="/styles.css" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <header>
+        <div class="header-left">
+            <h1>MEV Detector</h1>
+            <p id="connectionStatus">Connecting...</p>
+        </div>
+        <button id="connectWallet" class="btn-primary">Connect Wallet</button>
+    </header>
+
+    <nav class="dashboard-nav">
+        <button class="nav-item active" data-tab="overview">Overview</button>
+        <button class="nav-item" data-tab="attacks">Live Attacks</button>
+        <button class="nav-item" data-tab="simulator">Simulator</button>
+        <button class="nav-item" data-tab="education">Education</button>
+    </nav>
+
+    <main>
+        <div id="notifications" class="notifications-container"></div>
+        <div class="dashboard-layout">
+            <div class="dashboard-main">
+                <div id="overview" class="tab-content active">
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <h3>Today's Attacks</h3>
+                            <p id="attackCount">0</p>
+                        </div>
+                        <div class="stat-card">
+                            <h3>Average Risk Score</h3>
+                            <p id="riskScore">0%</p>
+                        </div>
+                        <div class="stat-card">
+                            <h3>Total Slippage (ETH)</h3>
+                            <p id="slippageTotal">0.00</p>
+                        </div>
+                        <div class="stat-card">
+                            <h3>Protected Users</h3>
+                            <p id="protectedUsers">0</p>
+                        </div>
+                    </div>
+                    <div class="charts-grid">
+                        <div class="chart-card">
+                            <h3>Attack Distribution</h3>
+                            <canvas id="pieChart"></canvas>
+                        </div>
+                        <div class="chart-card">
+                            <h3>Attack Trend</h3>
+                            <canvas id="lineChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <aside class="dashboard-sidebar">
+                <div class="sidebar-section risk-map">
+                    <h3>Risk Map</h3>
+                    <div id="riskHeatmap">[Risk Map Placeholder]</div>
+                </div>
+                <div class="sidebar-section rewards">
+                    <h3>Rewards</h3>
+                    <div id="rewards">[Rewards Placeholder]</div>
+                </div>
+                <div class="sidebar-section alerts">
+                    <h3>Alerts</h3>
+                    <ul id="alertsList">
+                        <li>[Alert Placeholder]</li>
+                    </ul>
+                </div>
+            </aside>
+        </div>
+
+        <div id="attacks" class="tab-content">
+            <div class="feed-container">
+                <h2>Live Attack Feed</h2>
+                <div id="attackFeed" class="feed"></div>
+            </div>
+        </div>
+
+        <div id="simulator" class="tab-content">
+            <div class="simulator-container">
+                <h2>Transaction Simulator</h2>
+                <form id="simulatorForm" class="sim-form">
+                    <div class="form-group">
+                        <label for="targetAddress">Target Address</label>
+                        <input type="text" id="targetAddress" required pattern="^0x[a-fA-F0-9]{40}$" placeholder="0x..." />
+                    </div>
+                    <div class="form-group">
+                        <label for="txValue">Value (ETH)</label>
+                        <input type="number" id="txValue" step="0.000000000000000001" min="0" required />
+                    </div>
+                    <div class="form-group">
+                        <label for="txData">Transaction Data (optional)</label>
+                        <textarea id="txData" placeholder="0x..."></textarea>
+                    </div>
+                    <button type="submit" class="btn-primary">Simulate Transaction</button>
+                </form>
+                <div id="simResults" class="hidden"></div>
+            </div>
+        </div>
+
+        <div id="education" class="tab-content">
+            <div class="education-container">
+                <h2>Understanding MEV</h2>
+                <div class="education-content">
+                    <section>
+                        <h3>What is MEV?</h3>
+                        <p>Maximal Extractable Value (MEV) represents the maximum value that can be extracted from block production in excess of the standard block reward and gas fees by including, excluding, and changing the order of transactions in a block.</p>
+                    </section>
+                    <section>
+                        <h3>Common Attack Types</h3>
+                        <ul>
+                            <li><strong>Sandwich Attacks:</strong> Placing orders before and after a target transaction</li>
+                            <li><strong>Front-running:</strong> Placing a similar order ahead of a target with higher gas</li>
+                            <li><strong>Back-running:</strong> Exploiting state changes after a target transaction</li>
+                        </ul>
+                    </section>
+                    <section>
+                        <h3>Protection Strategies</h3>
+                        <ul>
+                            <li>Use flashbots private transactions</li>
+                            <li>Set appropriate slippage limits</li>
+                            <li>Monitor mempool for potential attacks</li>
+                            <li>Use time-weighted average pricing</li>
+                        </ul>
+                    </section>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="/app.js"></script>
+</body>
+</html>

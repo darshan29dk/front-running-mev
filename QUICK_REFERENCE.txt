@@ -1,0 +1,231 @@
+================================================================================
+  MEV DETECTOR DASHBOARD - QUICK REFERENCE CARD
+================================================================================
+
+🚀 START YOUR APP IN 10 SECONDS
+================================================================================
+
+TERMINAL 1 (Backend):
+  Set-Location "c:\Users\Darshan\Desktop\web3\server"
+  npm run dev
+
+TERMINAL 2 (Frontend):
+  Set-Location "c:\Users\Darshan\Desktop\web3\mev-detector"
+  npm start
+
+✅ That's it! Browser opens to http://localhost:3000
+
+================================================================================
+  IMPORTANT PORTS
+================================================================================
+Frontend:  http://localhost:3000
+Backend:   http://localhost:3001
+API:       http://localhost:3001/api
+WebSocket: ws://localhost:3001
+
+================================================================================
+  KEY FILES & LOCATIONS
+================================================================================
+Backend Source:  c:\Users\Darshan\Desktop\web3\server\src\
+Frontend Code:   c:\Users\Darshan\Desktop\web3\mev-detector\src\
+Config (Backend):c:\Users\Darshan\Desktop\web3\server\.env
+Config (Frontend):c:\Users\Darshan\Desktop\web3\mev-detector\.env
+
+================================================================================
+  COMPONENTS BUILT (Frontend)
+================================================================================
+✅ App.js              - Main dashboard with 5 tabs
+✅ AIChat.js           - Floating AI chatbot (9 topics)
+✅ EmailAlerts.js      - Email subscription form
+✅ RiskHeatmap.js      - 24-hour risk visualization
+✅ Education.js        - Learning hub (4 sections)
+✅ Rewards.js          - Gamification system
+
+================================================================================
+  SERVICES BUILT (Backend)
+================================================================================
+✅ server.ts           - Express + WebSocket server
+✅ mevDetector.ts      - MEV detection algorithm
+✅ mempoolMonitor.ts   - Real-time mempool listening
+✅ alchemyService.ts   - Alchemy blockchain data
+✅ flashbotsService.ts - Flashbots private relay
+✅ types.ts            - TypeScript interfaces
+
+================================================================================
+  API ENDPOINTS
+================================================================================
+GET  /api/health                  → Check if server is running
+GET  /api/attacks                 → Get recent MEV attacks
+GET  /api/attacks/statistics      → Attack stats by type
+GET  /api/gas-prices              → Current gas prices
+GET  /api/status                  → Full system status
+POST /api/analyze-transaction     → Analyze single transaction
+POST /api/protect-transaction     → Send to Flashbots
+POST /api/alerts/subscribe        → Subscribe to email alerts
+POST /api/alerts/send-test        → Send test alert
+
+================================================================================
+  TEST COMMANDS
+================================================================================
+# Check backend health:
+curl http://localhost:3001/api/health
+
+# Get recent attacks:
+curl http://localhost:3001/api/attacks
+
+# Get gas prices:
+curl http://localhost:3001/api/gas-prices
+
+# Get system status:
+curl http://localhost:3001/api/status
+
+================================================================================
+  TROUBLESHOOTING
+================================================================================
+Issue: "Connection refused" on localhost:3001
+  → Make sure backend is running: npm run dev in server folder
+  
+Issue: "Alchemy API key not working"
+  → Check .env file in server folder has your actual key
+  → Restart backend after changing .env
+  
+Issue: Frontend shows errors
+  → Clear browser cache: Ctrl+Shift+Delete
+  → Restart frontend: npm start
+  → Check browser console: F12
+  
+Issue: Email alerts not working
+  → Make sure backend is running on port 3001
+  → Check browser console for network errors
+
+================================================================================
+  ENVIRONMENT SETUP
+================================================================================
+Backend .env (c:\Users\Darshan\Desktop\web3\server\.env):
+  ALCHEMY_API_KEY=your_key_here
+  ALCHEMY_ENDPOINT_SEPOLIA=https://eth-sepolia.g.alchemy.com/v2/
+  ALCHEMY_ENDPOINT_MAINNET=https://eth-mainnet.g.alchemy.com/v2/
+  PORT=3001
+  NETWORK=sepolia
+
+Frontend .env (c:\Users\Darshan\Desktop\web3\mev-detector\.env):
+  REACT_APP_API_URL=http://localhost:3001/api
+  REACT_APP_WS_URL=ws://localhost:3001
+
+Get Alchemy API Key:
+  1. Go to https://www.alchemy.com/
+  2. Sign up (free)
+  3. Create an app
+  4. Copy your API key
+  5. Put in .env file
+
+================================================================================
+  DASHBOARD FEATURES
+================================================================================
+Dashboard Tab:
+  - Real-time MEV attacks
+  - Risk score (0-100) with colors
+  - Statistics cards
+  - Gas price info
+
+Risk Map Tab:
+  - 24-hour risk heatmap
+  - Color-coded by risk level
+  - Hover for details
+  - Safe hours indicator
+
+Alerts Tab:
+  - Email subscription form
+  - 5 alert types to choose
+  - Send test email
+  - Manage preferences
+
+Learn Tab:
+  - 4 educational sections
+  - Basics, Attacks, Protection, Advanced
+  - 12+ detailed explanations
+  - Quick tips
+
+Rewards Tab:
+  - User profile & level
+  - 6 collectible badges
+  - Points tracker
+  - Top 5 leaderboard
+
+================================================================================
+  CUSTOMIZATION QUICK TIPS
+================================================================================
+Change Brand Colors:
+  → Edit: mev-detector/tailwind.config.js
+  → Change cyan/blue theme colors
+
+Add Chat Topics:
+  → Edit: src/components/AIChat.js
+  → Add new key-value pairs to knowledgeBase
+
+Add More Badges:
+  → Edit: src/components/Rewards.js
+  → Add new badge objects to badges array
+
+Change Network:
+  → Edit: server/.env
+  → Change NETWORK=sepolia to NETWORK=mainnet
+
+================================================================================
+  DOCUMENTATION FILES
+================================================================================
+README.md                  → Project overview
+QUICK_START.md            → Initial setup
+DEPLOYMENT.md             → Production guide
+COMPONENT_REFERENCE.md    → Component details
+IMPLEMENTATION_STATUS.md  → What's built/pending
+DEPLOY_NOW.md             → Quick deployment
+FINAL_BUILD_SUMMARY.md    → Complete summary
+
+================================================================================
+  IMPORTANT NOTES
+================================================================================
+✅ All data is currently MOCK (for testing)
+✅ Real MEV detection requires Alchemy WebSocket setup
+✅ Email sending requires EmailJS/SendGrid setup
+✅ Flashbots integration is ready to use
+✅ TypeScript is fully compiled and ready
+
+================================================================================
+  NEXT STEPS (If Needed)
+================================================================================
+1. Get Alchemy API key (free at alchemy.com)
+2. Start backend & frontend
+3. Test all features
+4. Setup EmailJS for real emails
+5. Create database for persistent data
+6. Deploy to production server
+
+================================================================================
+  SUPPORT RESOURCES
+================================================================================
+Alchemy Docs:      https://docs.alchemy.com/
+Flashbots Docs:    https://docs.flashbots.net/
+React Docs:        https://react.dev/
+Tailwind CSS:      https://tailwindcss.com/
+Ethers.js:         https://docs.ethers.org/
+
+================================================================================
+  YOU'RE ALL SET! 🚀
+================================================================================
+
+Start your app now:
+
+Terminal 1:
+  Set-Location "c:\Users\Darshan\Desktop\web3\server"
+  npm run dev
+
+Terminal 2:
+  Set-Location "c:\Users\Darshan\Desktop\web3\mev-detector"
+  npm start
+
+Then open: http://localhost:3000
+
+Happy protecting! 🛡️
+
+================================================================================
