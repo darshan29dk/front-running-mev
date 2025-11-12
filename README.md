@@ -305,4 +305,5 @@ This software is provided "as-is" without warranty. Using this tool does not gua
 **Built with ❤️ for Ethereum traders**
 
 Stay safe. Protect your swaps. 🛡️✨#   m e v - d e t e c t o r  
+ #   f r o n t - r u n n i n g - m e v  
  
