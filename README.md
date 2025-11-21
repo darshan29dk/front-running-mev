@@ -16,6 +16,7 @@ A full-stack dApp that detects and protects against MEV (Miner Extractable Value
 - **Flashbots Integration**: Send transactions privately via Flashbots Protect to avoid MEV bots
 - **Premium Features**: ETH-based micropayments for advanced protection and analytics
 - **Real-Time Alerts**: WebSocket-powered live notifications for detected attacks
+- **Crypto Market Analysis**: Live cryptocurrency market data and analysis
 
 ### Technical Highlights
 - **Alchemy Mempool Monitoring**: Poll pending transaction pool and analyze patterns
@@ -23,6 +24,7 @@ A full-stack dApp that detects and protects against MEV (Miner Extractable Value
 - **On-Chain Payment**: ETH micropayments for premium features
 - **Historical Analytics**: Track attack patterns over time
 - **Beautiful UI**: React + Tailwind CSS dashboard with real-time charts
+- **Market Data Integration**: CoinMarketCap and CoinGecko API integration
 
 ## 🏗️ Architecture
 
@@ -36,12 +38,12 @@ mev-detector/
 │   └── package.json
 │
 └── server/                   # Node.js + Express backend
-    ├── src/
-    │   ├── services/        # Alchemy, Flashbots, Payments
-    │   ├── utils/           # MEV detection logic
-    │   ├── routes/          # API endpoints
-    │   └── server.ts        # Express server
-    └── package.json
+   ├── src/
+   │   ├── services/        # Alchemy, Flashbots, Payments
+   │   ├── utils/           # MEV detection logic
+   │   ├── routes/          # API endpoints
+   │   └── server.ts        # Express server
+   └── package.json
 ```
 
 ## 🚀 Quick Start
@@ -49,6 +51,7 @@ mev-detector/
 ### Prerequisites
 - Node.js 16+ and npm/yarn
 - Alchemy API key (free at https://www.alchemy.com/)
+- CoinMarketCap API key (free at https://coinmarketcap.com/api/)
 - MetaMask wallet for testing
 
 ### 1. Backend Setup
@@ -64,7 +67,9 @@ ALCHEMY_API_KEY=your_alchemy_api_key_here
 ALCHEMY_ENDPOINT_MAINNET=https://eth-mainnet.g.alchemy.com/v2/
 ALCHEMY_ENDPOINT_SEPOLIA=https://eth-sepolia.g.alchemy.com/v2/
 FLASHBOTS_RELAY_URL=https://relay.flashbots.net
-PORT=5000
+COINMARKETCAP_API_KEY=your_coinmarketcap_api_key_here
+COINGECKO_API_KEY=your_coingecko_api_key_here
+PORT=3001
 NETWORK=sepolia
 PREMIUM_FEATURE_FEE=0.001
 SIMULATION_FEE=0.0001
@@ -75,7 +80,7 @@ Start backend:
 npm run dev
 ```
 
-Backend runs at `http://localhost:5000`
+Backend runs at `http://localhost:3001`
 
 ### 2. Frontend Setup
 
@@ -86,8 +91,8 @@ npm install
 
 Create `.env` file:
 ```env
-REACT_APP_API_URL=http://localhost:5000/api
-REACT_APP_WS_URL=ws://localhost:5000
+REACT_APP_API_URL=http://localhost:3001
+REACT_APP_WS_URL=ws://localhost:3001
 REACT_APP_NETWORK=sepolia
 ```
 
@@ -123,6 +128,16 @@ GET /api/simulate/:id              # Get simulation results
 ### Flashbots Private Relay (Premium)
 ```
 POST /api/protected-relay          # Send private transaction via Flashbots
+```
+
+### Crypto Market Data
+```
+GET /api/crypto/global-metrics     # Global cryptocurrency market metrics
+GET /api/crypto/listings           # Cryptocurrency listings
+GET /api/crypto/historical         # Historical price data
+GET /api/crypto/indicators         # Technical indicators
+GET /api/crypto/trending           # Trending cryptocurrencies
+GET /api/crypto/fear-greed         # Fear & Greed Index
 ```
 
 ### User & Payment
@@ -208,6 +223,31 @@ The detector uses multiple indicators:
    - No MEV bots can see it
    - Executes safely on-chain
 
+## 📈 Crypto Market Analysis Module
+
+### Features
+- **Global Market Overview**: Real-time market cap, volume, and dominance metrics
+- **Technical Indicators**: RSI, Moving Averages, Fear & Greed Index
+- **Cryptocurrency Leaderboard**: Top coins with price, volume, and performance data
+- **Trending Coins**: Currently popular cryptocurrencies with sparkline charts
+- **ETF Flows**: Cryptocurrency ETF inflow/outflow tracking
+- **Gas Fees**: Network gas fee monitoring for Ethereum, Polygon, and Avalanche
+- **Historical Charts**: Price history visualization
+
+### Setup
+1. Obtain API keys from CoinMarketCap and CoinGecko
+2. Add keys to `server/.env`:
+   ```
+   COINMARKETCAP_API_KEY=your_key_here
+   COINGECKO_API_KEY=your_key_here
+   ```
+3. Restart the backend server
+
+### Usage
+1. Navigate to the "Market Analysis" tab in the application
+2. View real-time market data and analysis
+3. Use sorting and filtering options to customize the view
+
 ## 🔧 Configuration
 
 ### MEV Detection Settings (server/src/config.ts)
@@ -239,6 +279,7 @@ knownRouters: [
 - **Attack Distribution**: Pie chart by attack type
 - **Attacks Over Time**: Line chart of hourly detections
 - **Recent Attacks**: Live feed of latest detections
+- **Market Trends**: Cryptocurrency market data and analysis
 
 ## 🚀 Deployment
 
@@ -270,6 +311,7 @@ git push heroku main
 - [ ] **Mobile App**: iOS/Android version
 - [ ] **NFT Gating**: NFT-based premium access
 - [ ] **DAO Governance**: Community-driven features
+- [ ] **Advanced Market Analytics**: Deeper market insights and predictions
 
 ## 🤝 Contributing
 
@@ -297,6 +339,8 @@ This software is provided "as-is" without warranty. Using this tool does not gua
 
 - [Alchemy](https://www.alchemy.com/) - Mempool API
 - [Flashbots](https://www.flashbots.net/) - Private transaction relay
+- [CoinMarketCap](https://coinmarketcap.com/) - Market data API
+- [CoinGecko](https://www.coingecko.com/) - Market data API
 - [OpenZeppelin](https://www.openzeppelin.com/) - Security best practices
 - [Ethereum Foundation](https://ethereum.org/) - Technical resources
 
@@ -304,6 +348,4 @@ This software is provided "as-is" without warranty. Using this tool does not gua
 
 **Built with ❤️ for Ethereum traders**
 
-Stay safe. Protect your swaps. 🛡️✨#   m e v - d e t e c t o r  
- #   f r o n t - r u n n i n g - m e v  
- 
+Stay safe. Protect your swaps. 🛡️✨

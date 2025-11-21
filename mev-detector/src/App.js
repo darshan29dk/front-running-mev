@@ -8,6 +8,7 @@ import LiveFeed from './components/LiveFeed';
 import Simulator from './components/Simulator';
 import FlashbotsProtection from './components/FlashbotsProtection';
 import WeeklyReport from './components/WeeklyReport';
+import CryptoMarketTrends from './components/CryptoMarketTrends';
 
 function App() {
   const [mevData, setMevData] = useState([]);
@@ -152,7 +153,8 @@ function App() {
               { id: 'heatmap', label: 'Risk Map', icon: '🔥' },
               { id: 'alerts', label: 'Alerts', icon: '📧' },
               { id: 'education', label: 'Learn', icon: '📚' },
-              { id: 'rewards', label: 'Rewards', icon: '🏆' }
+              { id: 'rewards', label: 'Rewards', icon: '🏆' },
+              { id: 'market', label: 'Market Analysis', icon: '📈' }
             ].map(tab => (
               <button
                 key={tab.id}
@@ -341,6 +343,14 @@ function App() {
             <Rewards userAddress="0x742d3...8Qf2c" />
           </div>
         )}
+
+        {/* Market Trends Tab */}
+        {activeTab === 'market' && (
+          <div className="space-y-6">
+            <CryptoMarketTrends />
+          </div>
+        )}
+
       </main>
 
       {/* AI Chat Widget */}

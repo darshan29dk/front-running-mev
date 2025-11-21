@@ -118,6 +118,9 @@ export interface Config {
   privateKey?: string;
   databaseUrl?: string;
   jwtSecret?: string;
+  // New API keys for cryptocurrency market data
+  coinMarketCapApiKey?: string;
+  coinGeckoApiKey?: string;
   email?: EmailConfig;
   mevShare?: MevShareConfig;
   crossChain?: CrossChainConfig;
@@ -265,4 +268,76 @@ export interface PushRegistration {
   address?: string;
   label?: string;
   registeredAt: string;
+}
+
+// New interfaces for cryptocurrency market data
+export interface GlobalMetrics {
+  totalMarketCap: number;
+  totalVolume24h: number;
+  bitcoinDominance: number;
+  ethereumDominance: number;
+  activeCryptocurrencies: number;
+  activeExchanges: number;
+  lastUpdated: string;
+}
+
+export interface CryptocurrencyQuote {
+  price: number;
+  volume24h: number;
+  percentChange1h: number;
+  percentChange24h: number;
+  percentChange7d: number;
+  percentChange30d: number;
+  marketCap: number;
+  lastUpdated: string;
+}
+
+export interface Cryptocurrency {
+  id: number;
+  name: string;
+  symbol: string;
+  slug: string;
+  cmcRank: number;
+  numMarketPairs: number;
+  circulatingSupply: number;
+  totalSupply: number;
+  maxSupply: number | null;
+  lastUpdated: string;
+  dateAdded: string;
+  tags: string[];
+  platform: any;
+  quote: {
+    [fiat: string]: CryptocurrencyQuote;
+  };
+}
+
+export interface TechnicalIndicator {
+  symbol: string;
+  name: string;
+  value: number;
+  timestamp: string;
+  period?: number;
+}
+
+export interface TrendingCoin {
+  id: number;
+  name: string;
+  symbol: string;
+  marketCapRank: number;
+  price: number;
+  priceChangePercentage24h: number;
+  totalVolume: number;
+  score: number;
+}
+
+export interface HistoricalDataPoint {
+  timestamp: string;
+  price: number;
+  volume24h: number;
+  marketCap: number;
+}
+
+export interface HistoricalDataResponse {
+  symbol: string;
+  data: HistoricalDataPoint[];
 }

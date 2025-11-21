@@ -24,7 +24,7 @@ const crossChainPollMs = parseInt(process.env.CROSSCHAIN_POLL_INTERVAL_MS || '15
 
 const config: Config = {
   alchemyKey: apiKey,
-  port: parseInt(process.env.PORT || '3001'),
+  port: parseInt(process.env.PORT || '5000'),
   network,
   alchemyEndpoint: alchemyBase ? `${alchemyBase}${apiKey}` : '',
   flashbotsRelayUrl: process.env.FLASHBOTS_RELAY_URL || 'https://relay.flashbots.net',
@@ -32,6 +32,9 @@ const config: Config = {
   privateKey: process.env.PRIVATE_KEY,
   databaseUrl: process.env.DATABASE_URL,
   jwtSecret: process.env.JWT_SECRET || 'dev-secret',
+  // New API keys for cryptocurrency market data
+  coinMarketCapApiKey: process.env.COINMARKETCAP_API_KEY,
+  coinGeckoApiKey: process.env.COINGECKO_API_KEY,
   email: {
     publicKey: process.env.EMAILJS_PUBLIC_KEY,
     privateKey: process.env.EMAILJS_PRIVATE_KEY,

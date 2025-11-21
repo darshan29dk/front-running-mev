@@ -31,6 +31,7 @@ import {
   PushRegistration,
 } from '../types';
 import pushNotificationService from '../services/pushNotificationService';
+import cryptoMarketService from '../services/cryptoMarketService';
 
 const router = Router();
 
@@ -735,5 +736,399 @@ router.get('/reports/weekly', (req: Request, res: Response) => {
     res.json({ success: true, data: { days, generatedAt: new Date().toISOString() } });
   } catch (error: any) {
     res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+/**
+ * GET /api/crypto/global-metrics
+ * Get global cryptocurrency market metrics
+ */
+router.get('/crypto/global-metrics', async (req: Request, res: Response) => {
+  try {
+    const metrics = await cryptoMarketService.getGlobalMetrics();
+    
+    res.json({
+      success: true,
+      data: metrics,
+      timestamp: new Date().toISOString(),
+    });
+  } catch (error: any) {
+    res.status(500).json({
+      success: false,
+      error: error.message,
+    });
+  }
+});
+
+/**
+ * GET /api/crypto/listings
+ * Get cryptocurrency listings with filters
+ */
+router.get('/crypto/listings', async (req: Request, res: Response) => {
+  try {
+    const limit = Math.min(parseInt(req.query.limit as string) || 100, 500);
+    const sort = (req.query.sort as string) || 'market_cap';
+    const sortDir = (req.query.sort_dir as string) || 'desc';
+    
+    const listings = await cryptoMarketService.getCryptocurrencyListings(limit, sort, sortDir);
+    
+    res.json({
+      success: true,
+      data: listings,
+      count: listings.length,
+      timestamp: new Date().toISOString(),
+    });
+  } catch (error: any) {
+    res.status(500).json({
+      success: false,
+      error: error.message,
+    });
+  }
+});
+
+/**
+ * GET /api/crypto/historical
+ * Get historical data for a cryptocurrency
+ */
+router.get('/crypto/historical', async (req: Request, res: Response) => {
+  try {
+    const { symbol, time_start, time_end, interval } = req.query;
+    
+    if (!symbol || typeof symbol !== 'string') {
+      return res.status(400).json({
+        success: false,
+        error: 'symbol is required',
+      });
+    }
+    
+    const timeStart = (time_start as string) || new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(); // Default to 30 days ago
+    const timeEnd = (time_end as string) || new Date().toISOString();
+    const intervalStr = (interval as string) || 'daily';
+    
+    const historicalData = await cryptoMarketService.getHistoricalData(
+      symbol.toUpperCase(),
+      timeStart,
+      timeEnd,
+      intervalStr
+    );
+    
+    res.json({
+      success: true,
+      data: historicalData,
+      timestamp: new Date().toISOString(),
+    });
+  } catch (error: any) {
+    res.status(500).json({
+      success: false,
+      error: error.message,
+    });
+  }
+});
+
+/**
+ * GET /api/crypto/indicators
+ * Get technical indicators for a cryptocurrency
+ */
+router.get('/crypto/indicators', async (req: Request, res: Response) => {
+  try {
+    const { symbol, indicator, period } = req.query;
+    
+    if (!symbol || typeof symbol !== 'string') {
+      return res.status(400).json({
+        success: false,
+        error: 'symbol is required',
+      });
+    }
+    
+    if (!indicator || typeof indicator !== 'string') {
+      return res.status(400).json({
+        success: false,
+        error: 'indicator is required',
+      });
+    }
+    
+    const indicators = await cryptoMarketService.getTechnicalIndicators(
+      symbol.toUpperCase(),
+      indicator,
+      period ? parseInt(period as string) : undefined
+    );
+    
+    res.json({
+      success: true,
+      data: indicators,
+      timestamp: new Date().toISOString(),
+    });
+  } catch (error: any) {
+    res.status(500).json({
+      success: false,
+      error: error.message,
+    });
+  }
+});
+
+/**
+ * GET /api/crypto/trending
+ * Get trending cryptocurrencies
+ */
+router.get('/crypto/trending', async (req: Request, res: Response) => {
+  try {
+    const coin = (req.query.coin as string) || '';
+    const trending = await cryptoMarketService.getTrendingCoins(coin);
+    
+    res.json({
+      success: true,
+      data: trending,
+      count: trending.length,
+      timestamp: new Date().toISOString(),
+    });
+  } catch (error: any) {
+    res.status(500).json({
+      success: false,
+      error: error.message,
+    });
+  }
+});
+
+/**
+ * GET /api/crypto/fear-greed
+ * Get Fear & Greed Index
+ */
+router.get('/crypto/fear-greed', async (req: Request, res: Response) => {
+  try {
+    const index = await cryptoMarketService.getFearGreedIndex();
+    
+    res.json({
+      success: true,
+      data: {
+        index,
+        label: index >= 90 ? 'Extreme Greed' : 
+              index >= 75 ? 'Greed' : 
+              index >= 50 ? 'Neutral' : 
+              index >= 25 ? 'Fear' : 
+              'Extreme Fear',
+        timestamp: new Date().toISOString(),
+      },
+      timestamp: new Date().toISOString(),
+    });
+  } catch (error: any) {
+    res.status(500).json({
+      success: false,
+      error: error.message,
+    });
+  }
+});
+
+/**
+ * GET /api/crypto/etf-flows
+ * Get ETF flow data
+ */
+router.get('/crypto/etf-flows', async (req: Request, res: Response) => {
+  try {
+    const etfData = await cryptoMarketService.getETFData();
+    
+    res.json({
+      success: true,
+      data: etfData,
+      timestamp: new Date().toISOString(),
+    });
+  } catch (error: any) {
+    res.status(500).json({
+      success: false,
+      error: error.message,
+    });
+  }
+});
+
+/**
+ * GET /api/crypto/gas-fees
+ * Get gas fee data for different networks
+ */
+router.get('/crypto/gas-fees', async (req: Request, res: Response) => {
+  try {
+    const gasFeeData = await cryptoMarketService.getGasFeeData();
+    
+    res.json({
+      success: true,
+      data: gasFeeData,
+      timestamp: new Date().toISOString(),
+    });
+  } catch (error: any) {
+    res.status(500).json({
+      success: false,
+      error: error.message,
+    });
+  }
+});
+
+/**
+ * GET /api/crypto/volatility
+ * Get volatility data for specified cryptocurrencies
+ */
+router.get('/crypto/volatility', async (req: Request, res: Response) => {
+  try {
+    const symbols = (req.query.symbols as string)?.split(',') || ['BTC', 'ETH'];
+    const volatilityData = await cryptoMarketService.getVolatilityData(symbols);
+    
+    res.json({
+      success: true,
+      data: volatilityData,
+      timestamp: new Date().toISOString(),
+    });
+  } catch (error: any) {
+    res.status(500).json({
+      success: false,
+      error: error.message,
+    });
+  }
+});
+
+/**
+ * GET /api/crypto/correlations
+ * Get correlation data for specified assets
+ */
+router.get('/crypto/correlations', async (req: Request, res: Response) => {
+  try {
+    const assets = (req.query.assets as string)?.split(',') || ['BTC', 'ETH', 'SOL'];
+    const correlationData = await cryptoMarketService.getCorrelationData(assets);
+    
+    res.json({
+      success: true,
+      data: correlationData,
+      timestamp: new Date().toISOString(),
+    });
+  } catch (error: any) {
+    res.status(500).json({
+      success: false,
+      error: error.message,
+    });
+  }
+});
+
+/**
+ * GET /api/crypto/market-cycle
+ * Get market cycle data
+ */
+router.get('/crypto/market-cycle', async (req: Request, res: Response) => {
+  try {
+    const marketCycleData = await cryptoMarketService.getMarketCycleData();
+    
+    res.json({
+      success: true,
+      data: marketCycleData,
+      timestamp: new Date().toISOString(),
+    });
+  } catch (error: any) {
+    res.status(500).json({
+      success: false,
+      error: error.message,
+    });
+  }
+});
+
+/**
+ * GET /api/crypto/on-chain
+ * Get on-chain analytics data for a specific cryptocurrency
+ */
+router.get('/crypto/on-chain', async (req: Request, res: Response) => {
+  try {
+    const symbol = (req.query.symbol as string) || 'BTC';
+    const onChainData = await cryptoMarketService.getOnChainData(symbol.toUpperCase());
+    
+    res.json({
+      success: true,
+      data: onChainData,
+      timestamp: new Date().toISOString(),
+    });
+  } catch (error: any) {
+    res.status(500).json({
+      success: false,
+      error: error.message,
+    });
+  }
+});
+
+/**
+ * GET /api/crypto/whale-activity
+ * Get whale activity data for a specific cryptocurrency
+ */
+router.get('/crypto/whale-activity', async (req: Request, res: Response) => {
+  try {
+    const symbol = (req.query.symbol as string) || 'BTC';
+    const whaleActivityData = await cryptoMarketService.getWhaleActivityData(symbol.toUpperCase());
+    
+    res.json({
+      success: true,
+      data: whaleActivityData,
+      timestamp: new Date().toISOString(),
+    });
+  } catch (error: any) {
+    res.status(500).json({
+      success: false,
+      error: error.message,
+    });
+  }
+});
+
+/**
+ * GET /api/crypto/stablecoins
+ * Get stablecoin data
+ */
+router.get('/crypto/stablecoins', async (req: Request, res: Response) => {
+  try {
+    const stablecoinData = await cryptoMarketService.getStablecoinData();
+    
+    res.json({
+      success: true,
+      data: stablecoinData,
+      timestamp: new Date().toISOString(),
+    });
+  } catch (error: any) {
+    res.status(500).json({
+      success: false,
+      error: error.message,
+    });
+  }
+});
+
+/**
+ * GET /api/crypto/defi-metrics
+ * Get DeFi metrics
+ */
+router.get('/crypto/defi-metrics', async (req: Request, res: Response) => {
+  try {
+    const defiMetrics = await cryptoMarketService.getDeFiMetrics();
+    
+    res.json({
+      success: true,
+      data: defiMetrics,
+      timestamp: new Date().toISOString(),
+    });
+  } catch (error: any) {
+    res.status(500).json({
+      success: false,
+      error: error.message,
+    });
+  }
+});
+
+/**
+ * GET /api/crypto/mining-metrics
+ * Get mining metrics for a specific cryptocurrency
+ */
+router.get('/crypto/mining-metrics', async (req: Request, res: Response) => {
+  try {
+    const coin = (req.query.coin as string) || 'BTC';
+    const miningMetrics = await cryptoMarketService.getMiningMetrics(coin.toUpperCase());
+    
+    res.json({
+      success: true,
+      data: miningMetrics,
+      timestamp: new Date().toISOString(),
+    });
+  } catch (error: any) {
+    res.status(500).json({
+      success: false,
+      error: error.message,
+    });
   }
 });
