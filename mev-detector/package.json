@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "MEV Detector - Real-time Ethereum MEV attack detection dashboard",
   "private": true,
-  "homepage": "https://darshan29dk.github.io/front-running-mev",
+  "homepage": ".",
   "dependencies": {
     "@emailjs/browser": "^3.11.0",
     "axios": "^1.6.2",
